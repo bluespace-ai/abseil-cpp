@@ -53,6 +53,41 @@ OPTION(BUILD_TESTING "Build tests" OFF)
 project(absl LANGUAGES CXX)
 include(CTest)
 
+### ROS configuration
+set(ABSL_ENABLE_INSTALL TRUE)
+# Suppress warning and ensure the outer code is at least C++11.
+set(ABSL_PROPAGATE_CXX_STD TRUE)
+# By default, ABSL is built as a static library.  This builds shared libraries too.
+set(BUILD_SHARED_LIBS TRUE)
+
+if (NOT BUILD_SHARED_LIBS)
+  # If building as a static library, allow linking into a shared library.
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# Enable Foxy standards
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default is C++14, but our code requires C++17, *and* Abseil is not
+# backwards-compatible between these standards.  So we can't build absl with
+# C++14 and then depend on it from the C++17 code.
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # -Wpedantic has too many errors about __int128
+  add_compile_options(-Wall -Wextra)
+endif()
+
+# Use ament.
+find_package(ament_cmake REQUIRED)
+### End of ROS configuration (more things were patched below)
+
+
 # Output directory is correct by default for most build setups. However, when
 # building Abseil as a DLL, it is important to have the DLL in the same
 # directory as the executable using it. Thus, we put all executables in a single
@@ -198,9 +233,15 @@ if(ABSL_ENABLE_INSTALL)
     "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )
-  install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-  )
+
+  # Do not install this file; instead let ament install it.  Otherwise the
+  # wrong config will be picked up when *other* ROS2 packages include absl.
+  # The symptom you'd see would be the inability to find the include files
+  # (sic!)
+
+  #install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  #DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  #)
 
   # Abseil only has a version in LTS releases.  This mechanism is accomplished
   # Abseil's internal Copybara (https://github.com/google/copybara) workflows and
@@ -225,3 +266,7 @@ if(ABSL_ENABLE_INSTALL)
       PATTERN "testdata" EXCLUDE
     )
 endif()  # ABSL_ENABLE_INSTALL
+
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+
+ament_package()

@@ -1,8 +1,20 @@
-# Abseil - C++ Common Libraries
+# ROS2 package for Abseil - C++ Common Libraries
+
+This repository contains a ROS2-compatible wrapper around Abseil that adds
+Ament's `package.xml` and patches the minimal amount of things to make it play
+nicely with conlon and other ROS packages that use it as a dependency.
+
+By default, we use C++17 standard and compile the project as a shared library,
+but the build has been tested as a static library and with an older version of
+the C++ standard.
+
+# Original documentation for Abseil
 
 The repository contains the Abseil C++ library code. Abseil is an open-source
 collection of C++ code (compliant to C++11) designed to augment the C++
 standard library.
+
+----------------------------------
 
 ## Table of Contents
 
