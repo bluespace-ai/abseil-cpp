@@ -88,3 +88,16 @@ absl_cc_test(
     absl::statusor
     GTest::gmock_main
 )
+
+absl_cc_library(
+  NAME
+    status_macros
+  HDRS
+    "status_macros.h"
+  COPTS
+    ${ABSL_DEFAULT_COPTS}
+  DEPS
+    absl::status
+    absl::statusor
+  PUBLIC
+)
